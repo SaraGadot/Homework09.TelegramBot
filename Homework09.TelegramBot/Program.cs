@@ -1,6 +1,6 @@
 ﻿using Telegram.Bot;
 
-var token = "";
+var token = File.ReadAllText("token.txt");
 
 var botClient = new TelegramBotClient(token);
 
