@@ -38,9 +38,25 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     // Only process Message updates: https://core.telegram.org/bots/api#message
     if (update.Type != UpdateType.Message)
         return;
+    Console.WriteLine(update.Message!.Type);
+    if (update.Message!.Type == MessageType.Audio)
+    {
+        var file = await botClient.GetFileAsync(update.Message.Audio!.FileId);
+        Console.WriteLine(file.FilePath);
+    }
+    if (update.Message!.Type == MessageType.Voice)
+    {
+        var file = await botClient.GetFileAsync(update.Message.Voice!.FileId);
+        Console.WriteLine(file.FilePath);
+        using var localFile = System.IO.File.Create(Path.GetFileName(file.FilePath));
+        await botClient.DownloadFileAsync(file.FilePath, localFile);
+    }
+  
     // Only process text messages
     if (update.Message!.Type != MessageType.Text)
         return;
+    //update.Message.Audio
+    
 
     var chatId = update.Message.Chat.Id;
     var messageText = update.Message.Text;
@@ -66,3 +82,39 @@ Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, Cancell
     Console.WriteLine(ErrorMessage);
     return Task.CompletedTask;
 }
+
+
+
+
+
+
+
+//Что нужно сделать
+//Создайте бота для одной из следующих платформ:
+
+//Twitch,
+//Discord,
+//Telegram.
+
+
+//Бот обладает следующим набором функций:
+
+//Принимает сообщения и команды от пользователя.
+//Сохраняет аудиосообщения, картинки и произвольные файлы.
+//Позволяет пользователю просмотреть список загруженных файлов.
+//Позволяет скачать выбранный файл.
+
+
+//Команды можно делать разные, но среди них должна присутствовать команда /start.
+
+
+
+//Вы можете сделать бота на любую тематику. Например, ваш бот может искать видео на YouTube, выводить курс криптовалют, отображать данные о погоде и так далее.
+
+
+
+//Что оценивается
+//Бот принимает текстовые сообщения.
+//Бот реагирует на команду /start.
+//Бот позволяет сохранять на диск изображения, аудио- и другие файлы.
+//С помощью произвольной команды можно просмотреть список сохранённых файлов и скачать любой из них.
