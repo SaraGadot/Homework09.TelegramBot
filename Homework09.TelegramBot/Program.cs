@@ -52,7 +52,13 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             
         var file = await botClient.GetFileAsync(fileId);
         Console.WriteLine(file.FilePath);
-        using var localFile = System.IO.File.Create(Path.GetFileName(file.FilePath));
+        var dir = "Files";
+        if (!Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
+        var filePath = Path.Combine(dir, Path.GetFileName(file.FilePath));
+        using var localFile = System.IO.File.Create(filePath);
         await botClient.DownloadFileAsync(file.FilePath, localFile);
 
     }
