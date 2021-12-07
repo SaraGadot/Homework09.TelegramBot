@@ -39,19 +39,24 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     if (update.Type != UpdateType.Message)
         return;
     Console.WriteLine(update.Message!.Type);
-    if (update.Message!.Type == MessageType.Audio)
+    if (update.Message!.Type == MessageType.Audio || update.Message!.Type == MessageType.Voice 
+        || update.Message!.Type == MessageType.Photo || update.Message!.Type == MessageType.Document)
     {
-        var file = await botClient.GetFileAsync(update.Message.Audio!.FileId);
-        Console.WriteLine(file.FilePath);
-    }
-    if (update.Message!.Type == MessageType.Voice)
-    {
-        var file = await botClient.GetFileAsync(update.Message.Voice!.FileId);
+        var fileId = update.Message!.Type switch
+        {
+            MessageType.Audio => update.Message.Audio!.FileId,
+            MessageType.Voice => update.Message.Voice!.FileId,
+            MessageType.Photo => update.Message.Photo!.Last().FileId,
+            MessageType.Document => update.Message.Document!.FileId
+        };
+            
+        var file = await botClient.GetFileAsync(fileId);
         Console.WriteLine(file.FilePath);
         using var localFile = System.IO.File.Create(Path.GetFileName(file.FilePath));
         await botClient.DownloadFileAsync(file.FilePath, localFile);
+
     }
-  
+    
     // Only process text messages
     if (update.Message!.Type != MessageType.Text)
         return;
