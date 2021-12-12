@@ -3,7 +3,9 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InputFiles;
 
+// https://telegrambots.github.io/book/1/quickstart.html
 var token = System.IO.File.ReadAllText("token.txt");
 
 var botClient = new TelegramBotClient(token);
@@ -62,7 +64,17 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         await botClient.DownloadFileAsync(file.FilePath, localFile);
 
     }
-    
+    if (update.Message!.Type == MessageType.Text && update.Message.Text == "/download")
+    {
+        using (var stream = System.IO.File.OpenRead("Files/file_10.mp3"))
+        {
+            var inputOnlineFile = new InputOnlineFile(stream, "file_10.mp3");
+            await botClient.SendDocumentAsync(update.Message.Chat.Id, inputOnlineFile);
+        }
+        return;
+    }
+
+
     // Only process text messages
     if (update.Message!.Type != MessageType.Text)
         return;
