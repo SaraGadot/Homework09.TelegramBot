@@ -64,15 +64,37 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         await botClient.DownloadFileAsync(file.FilePath, localFile);
 
     }
-    if (update.Message!.Type == MessageType.Text && update.Message.Text == "/download")
+    if (update.Message!.Type == MessageType.Text && update.Message.Text.StartsWith("/download "))
     {
-        using (var stream = System.IO.File.OpenRead("Files/file_10.mp3"))
+        var fileName = update.Message!.Text.Substring("/download ".Length);
+        var filePath = Path.Combine("Files", fileName);
+        if (!System.IO.File.Exists(filePath))
         {
-            var inputOnlineFile = new InputOnlineFile(stream, "file_10.mp3");
+            await botClient.SendTextMessageAsync(
+                chatId: update.Message.Chat.Id,
+                text: "Такого файла нет",
+                cancellationToken: cancellationToken);
+            return;
+        }
+        
+
+        using (var stream = System.IO.File.OpenRead(filePath))
+        {
+            var inputOnlineFile = new InputOnlineFile(stream, fileName);
             await botClient.SendDocumentAsync(update.Message.Chat.Id, inputOnlineFile);
         }
         return;
     }
+    if (update.Message!.Type == MessageType.Text && update.Message.Text == "/browse")
+    {
+        var filesText = string.Join("\n", Directory.GetFiles("Files")); 
+        await botClient.SendTextMessageAsync(
+            chatId: update.Message.Chat.Id,
+            text: filesText,
+            cancellationToken: cancellationToken);
+        return;
+    }
+    
 
 
     // Only process text messages
