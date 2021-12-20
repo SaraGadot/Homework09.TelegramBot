@@ -4,6 +4,7 @@ using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
+using Telegram.Bot.Types.ReplyMarkups;
 
 // https://telegrambots.github.io/book/1/quickstart.html
 var token = System.IO.File.ReadAllText("token.txt");
@@ -87,11 +88,27 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     }
     if (update.Message!.Type == MessageType.Text && update.Message.Text == "/browse")
     {
-        var filesText = string.Join("\n", Directory.GetFiles("Files")); 
+        var files = Directory.GetFiles("Files");
+        var filesText = string.Join("\n", files); 
         await botClient.SendTextMessageAsync(
             chatId: update.Message.Chat.Id,
             text: filesText,
             cancellationToken: cancellationToken);
+
+
+
+
+
+        var replyKeyboardMarkup = new ReplyKeyboardMarkup(
+            files.Select(file => new KeyboardButton[] { new KeyboardButton($"/download {Path.GetFileName(file)}") })
+           );
+
+       await botClient.SendTextMessageAsync(
+            chatId: update.Message.Chat.Id,
+            text: "Choose a response",
+            replyMarkup: replyKeyboardMarkup,
+            cancellationToken: cancellationToken);
+
         return;
     }
     
