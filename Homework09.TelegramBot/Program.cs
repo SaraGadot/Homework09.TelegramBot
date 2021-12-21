@@ -65,7 +65,17 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         await botClient.DownloadFileAsync(file.FilePath, localFile);
 
     }
-    if (update.Message!.Type == MessageType.Text && update.Message.Text.StartsWith("/download "))
+
+    if (update.Message!.Type == MessageType.Text && update.Message.Text == "/start")
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: update.Message.Chat.Id,
+            text: "Отправляйте свои файлы и скачивайте уже отправленные файлы через команду /browse",
+            cancellationToken: cancellationToken);
+        return;
+    }
+
+    if (update.Message!.Type == MessageType.Text && update.Message.Text!.StartsWith("/download "))
     {
         var fileName = update.Message!.Text.Substring("/download ".Length);
         var filePath = Path.Combine("Files", fileName);
@@ -101,7 +111,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 
        await botClient.SendTextMessageAsync(
             chatId: update.Message.Chat.Id,
-            text: "Выберете файл для скачивания",
+            text: "Выберите файл для скачивания",
             replyMarkup: replyKeyboardMarkup,
             cancellationToken: cancellationToken);
 
