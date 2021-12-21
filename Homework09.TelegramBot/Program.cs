@@ -89,15 +89,11 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     if (update.Message!.Type == MessageType.Text && update.Message.Text == "/browse")
     {
         var files = Directory.GetFiles("Files");
-        var filesText = string.Join("\n", files); 
+        var filesText = string.Join("\n", files.Select(file => $"❤︎ {Path.GetFileName(file)} ❤︎")); 
         await botClient.SendTextMessageAsync(
             chatId: update.Message.Chat.Id,
             text: filesText,
             cancellationToken: cancellationToken);
-
-
-
-
 
         var replyKeyboardMarkup = new ReplyKeyboardMarkup(
             files.Select(file => new KeyboardButton[] { new KeyboardButton($"/download {Path.GetFileName(file)}") })
@@ -105,7 +101,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
 
        await botClient.SendTextMessageAsync(
             chatId: update.Message.Chat.Id,
-            text: "Choose a response",
+            text: "Выберете файл для скачивания",
             replyMarkup: replyKeyboardMarkup,
             cancellationToken: cancellationToken);
 
