@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using Homework09.TelegramBot;
+using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
@@ -10,7 +11,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 var token = System.IO.File.ReadAllText("token.txt");
 
 var botClient = new TelegramBotClient(token);
-
+var fileStorage = new FileStorage();
 
 
 
@@ -55,15 +56,10 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
             
         var file = await botClient.GetFileAsync(fileId);
         Console.WriteLine(file.FilePath);
-        var dir = "Files";
-        if (!Directory.Exists(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
-        var filePath = Path.Combine(dir, Path.GetFileName(file.FilePath));
-        using var localFile = System.IO.File.Create(filePath);
-        await botClient.DownloadFileAsync(file.FilePath, localFile);
-
+        
+        var memoryStream = new MemoryStream();
+        await botClient.DownloadFileAsync(file.FilePath, memoryStream);
+        fileStorage.SaveFile(file.FilePath, memoryStream.ToArray());
     }
 
     if (update.Message!.Type == MessageType.Text && update.Message.Text == "/start")
@@ -78,8 +74,8 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     if (update.Message!.Type == MessageType.Text && update.Message.Text!.StartsWith("/download "))
     {
         var fileName = update.Message!.Text.Substring("/download ".Length);
-        var filePath = Path.Combine("Files", fileName);
-        if (!System.IO.File.Exists(filePath))
+        var data = fileStorage.LoadFile(fileName);
+        if (data == null)
         {
             await botClient.SendTextMessageAsync(
                 chatId: update.Message.Chat.Id,
@@ -89,7 +85,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
         }
         
 
-        using (var stream = System.IO.File.OpenRead(filePath))
+        using (var stream = new MemoryStream(data))
         {
             var inputOnlineFile = new InputOnlineFile(stream, fileName);
             await botClient.SendDocumentAsync(update.Message.Chat.Id, inputOnlineFile);
@@ -98,7 +94,7 @@ async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, Cancel
     }
     if (update.Message!.Type == MessageType.Text && update.Message.Text == "/browse")
     {
-        var files = Directory.GetFiles("Files");
+        var files = fileStorage.BrowseFiles();
         var filesText = string.Join("\n", files.Select(file => $"❤︎ {Path.GetFileName(file)} ❤︎")); 
         await botClient.SendTextMessageAsync(
             chatId: update.Message.Chat.Id,
